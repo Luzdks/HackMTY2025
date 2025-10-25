@@ -1,0 +1,14 @@
+# Entorno Virtual
+venv/
+.venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de Sistema Operativo
+.DS_Store
+Thumbs.db
+
+# (Opcional pero recomendado) Archivos de secretos
+.env
