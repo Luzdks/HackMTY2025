@@ -9,6 +9,3 @@ __pycache__/
 # Archivos de Sistema Operativo
 .DS_Store
 Thumbs.db
-
-# (Opcional pero recomendado) Archivos de secretos
-.env
