@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS # Para permitir que tu app frontend llame a esta API
+import random
 
 app = Flask(__name__)
+CORS(app) 
 
 # Simulación de la base de datos (simple diccionario)
 TRANSACCIONES = {}
@@ -47,6 +50,11 @@ def simular_pago(monto, token_tarjeta):
 
 # --- Endpoints de la API ---
 
+@app.route('/')
+def home():
+    """Ruta raíz simple para verificar que la API está viva."""
+    return "¡API VIVA!"
+
 @app.route('/api/v1/sandbox/charge', methods=['POST'])
 def crear_cargo():
     """Endpoint para simular la entrada de dinero (cargo)."""
@@ -91,4 +99,4 @@ def obtener_cargo(id_transaccion):
 if __name__ == '__main__':
     # Usar el puerto 5000 por defecto para Flask
     print(f"Sandbox iniciado. Clave Pública: {CLAVE_PUBLICA_SANDBOX}")
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
