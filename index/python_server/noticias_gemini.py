@@ -2,24 +2,19 @@ import google.generativeai as genai
 import feedparser
 import json
 import os
+import time
 
 # --- Configuración ---
-# 1. Pega tu API Key de Gemini aquí
-# ¡IMPORTANTE! Nunca compartas esta clave. 
-# Mejor usar una variable de entorno (os.environ.get)
 GEMINI_API_KEY = "AIzaSyDOVJ4gVXW2Zk_S42Q7cUKI5InwUSj1UzI"
-
-# 2. Configura el modelo de Gemini
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-pro')
 
-# 3. URL del Feed RSS de Google News
+#URL del Feed RSS de Google News
 # Buscamos "buenas noticias medio ambiente" o "soluciones cambio climatico"
 # hl=es (español), gl=MX (México). Puedes cambiar 'gl' a tu país (US, CO, ES, AR)
 RSS_URL = "https://news.google.com/rss/search?q=medio+ambiente&hl=es-419&gl=MX&ceid=US:es-419"
 
 # --- Funciones ---
-
 def fetch_google_news():
     """Obtiene las noticias del feed RSS de Google."""
     print(f"Buscando noticias en Google News RSS...")
@@ -50,7 +45,7 @@ def analyze_and_summarize_with_gemini(title, summary_snippet):
     - Si es positiva o neutral, usa esta estructura: 
     {{"es_positiva": true, "nuevo_resumen": "Tu resumen aquí..."}}
     
-    - Si NO es positiva ( negativa, o un 'greenwashing' vago), usa esta estructura:
+    - Si NO es positiva (negativa, o un 'greenwashing' vago), usa esta estructura:
     {{"es_positiva": false, "nuevo_resumen": null}}
     
     Artículo:
@@ -103,8 +98,15 @@ def main():
                 "descripcion": analysis.get("nuevo_resumen"),
                 "link": link,
             })
+
+            # Si ya tenemos 3 positivas, detenemos el bucle
+            if len(positive_news_list) >= 3:
+                print("\nSe encontraron 3 noticias positivas. Deteniendo búsqueda...")
+                break
         else:
             print(f"  -> Noticia descartada (neutral o negativa).")
+        # Espera 10 segundos antes del siguiente request para no sobrecargar la api
+        time.sleep(10)
 
     # 4. Imprimimos el resultado final
     print("\n--- RESULTADO FINAL: NOTICIAS POSITIVAS DE MEDIO AMBIENTE ---")
