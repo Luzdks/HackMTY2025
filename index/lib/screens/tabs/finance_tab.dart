@@ -125,7 +125,7 @@ class _FinanceTabState extends State<FinanceTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // --- 3. MONEDAS PARA EL AMBIENTE ---
-                    _buildSectionTitle('Monedas para el ambiente'),
+                    _buildSectionTitle('Monedero ambiental'),
                     _buildEcoCoinsCard(),
                     
                     const SizedBox(height: 24),

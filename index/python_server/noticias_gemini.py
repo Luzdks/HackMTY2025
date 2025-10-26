@@ -7,7 +7,7 @@ import os
 # 1. Pega tu API Key de Gemini aquí
 # ¡IMPORTANTE! Nunca compartas esta clave. 
 # Mejor usar una variable de entorno (os.environ.get)
-GEMINI_API_KEY = ""
+GEMINI_API_KEY = "AIzaSyDOVJ4gVXW2Zk_S42Q7cUKI5InwUSj1UzI"
 
 # 2. Configura el modelo de Gemini
 genai.configure(api_key=GEMINI_API_KEY)
@@ -47,10 +47,10 @@ def analyze_and_summarize_with_gemini(title, summary_snippet):
     3. Si ES positiva, crea un nuevo resumen corto y atractivo (máximo 2 frases).
     
     Responde SÓLO con un objeto JSON.
-    - Si es positiva, usa esta estructura: 
+    - Si es positiva o neutral, usa esta estructura: 
     {{"es_positiva": true, "nuevo_resumen": "Tu resumen aquí..."}}
     
-    - Si NO es positiva (es neutral, negativa, o un 'greenwashing' vago), usa esta estructura:
+    - Si NO es positiva ( negativa, o un 'greenwashing' vago), usa esta estructura:
     {{"es_positiva": false, "nuevo_resumen": null}}
     
     Artículo:
@@ -72,19 +72,6 @@ def analyze_and_summarize_with_gemini(title, summary_snippet):
     except Exception as e:
         print(f"  Error al procesar con Gemini: {e}")
         return {"es_positiva": False, "nuevo_resumen": None}
-
-def get_image_url(entry):
-    """Intenta extraer una URL de imagen del feed RSS."""
-    # Los feeds RSS a veces incluyen imágenes en 'media_thumbnail'
-    if 'media_thumbnail' in entry and entry.media_thumbnail:
-        return entry.media_thumbnail[0].get('url')
-    
-    # A veces están en 'links' con type 'image/jpeg'
-    if 'links' in entry:
-        for link in entry.links:
-            if 'type' in link and 'image' in link.type:
-                return link.href
-    return None
 
 # --- Función Principal ---
 
@@ -109,14 +96,12 @@ def main():
         if analysis and analysis.get("es_positiva"):
             print(f"  -> ¡Noticia positiva encontrada!")
             
-            image_url = get_image_url(entry)
             
             # 4. Guardamos los datos limpios
             positive_news_list.append({
                 "titulo": title,
                 "descripcion": analysis.get("nuevo_resumen"),
                 "link": link,
-                "imagen_url": image_url or "No se encontró imagen"
             })
         else:
             print(f"  -> Noticia descartada (neutral o negativa).")
@@ -131,7 +116,6 @@ def main():
         print(f"  Título: {news['titulo']}")
         print(f"  Descripción: {news['descripcion']}")
         print(f"  Link: {news['link']}")
-        print(f"  Imagen: {news['imagen_url']}")
 
 if __name__ == "__main__":
     main()

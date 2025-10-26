@@ -15,8 +15,10 @@ class AppColors {
   static const Color paleBlue = Color(0xFF90E0EF);
   static const Color veryPaleBlue = Color(0xFFADE8F4);
   static const Color almostWhiteBlue = Color(0xFFCAF0F8);
-  
+
   static const Color white = Color(0xFFFFFFFF);
   static const Color greyText = Color(0xFF6c757d);
   static const Color darkText = Color(0xFF343a40);
+
+  static Color? get lightGrey => null;
 }

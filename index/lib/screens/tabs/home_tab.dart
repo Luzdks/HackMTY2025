@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../theme/app_colors.dart'; // Importamos colores
+import '../../theme/app_colors.dart';
+import '../../../services/news_service.dart'; // Importamos el servicio de noticias
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -14,14 +15,19 @@ class _HomeTabState extends State<HomeTab> {
   String _userName = 'Cargando...';
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
+  
+  // Variables para las noticias
+  List<NewsItem> _news = [];
+  bool _isLoadingNews = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadNews(); // Cargar noticias al iniciar
   }
 
-  // Cargamos el nombre del usuario (como antes)
+  // Cargamos el nombre del usuario
   Future<void> _loadUserData() async {
     try {
       final user = _auth.currentUser;
@@ -40,6 +46,21 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
+  // Cargar noticias desde el servicio
+  Future<void> _loadNews() async {
+    try {
+      final news = await NewsService.getPositiveNews();
+      setState(() {
+        _news = news;
+        _isLoadingNews = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingNews = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +76,7 @@ class _HomeTabState extends State<HomeTab> {
             children: [
               _buildSavingsCard(), // Tarjeta de Ahorros
               const SizedBox(height: 24),
-              _buildNewsSection(), // Sección de Noticias
+              _buildNewsSection(), // Sección de Noticias (ACTUALIZADA)
               const SizedBox(height: 80), // Espacio para el botón flotante
             ],
           ),
@@ -64,7 +85,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // Widget para la tarjeta de ahorros
+  // Widget para la tarjeta de ahorros (SIN CAMBIOS)
   Widget _buildSavingsCard() {
     return Card(
       color: AppColors.white,
@@ -110,72 +131,143 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // Widget para la sección de noticias
+  // Widget para la sección de noticias (ACTUALIZADO)
   Widget _buildNewsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Noticias Relevantes',
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: AppColors.darkestBlue,
-          ),
+        Row(
+          children: [
+            const Text(
+              'Noticias Positivas',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.darkestBlue,
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoadingNews ? null : _loadNews,
+              tooltip: 'Actualizar noticias',
+            ),
+          ],
         ),
         const SizedBox(height: 16),
-        // Aquí iría un ListView.builder, pero usamos tarjetas estáticas
-        _buildNewsCard(
-          '¿Es buen momento para invertir en Cetes?',
-          'https://placehold.co/600x400/0077B6/FFFFFF?text=Noticia+1',
-        ),
-        _buildNewsCard(
-          'Nuevas funciones de ahorro en tu app',
-          'https://placehold.co/600x400/0096C7/FFFFFF?text=Noticia+2',
-        ),
-        _buildNewsCard(
-          'Cómo la IA está cambiando las finanzas',
-          'https://placehold.co/600x400/00B4D8/FFFFFF?text=Noticia+3',
-        ),
+        
+        // Estado de carga
+        if (_isLoadingNews)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(
+                color: AppColors.darkBlue,
+              ),
+            ),
+          )
+        
+        // Si no hay noticias
+        else if (_news.isEmpty)
+          const Card(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Column(
+                children: [
+                  Icon(Icons.article, size: 48, color: AppColors.greyText),
+                  SizedBox(height: 16),
+                  Text(
+                    'No hay noticias disponibles',
+                    style: TextStyle(
+                      color: AppColors.greyText,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        
+        // Lista de noticias
+        else
+          Column(
+            children: _news.map((newsItem) => _buildNewsCard(newsItem)).toList(),
+          ),
       ],
     );
   }
 
-  // Widget para una tarjeta de noticia individual
-  Widget _buildNewsCard(String title, String imageUrl) {
+  // Widget para una tarjeta de noticia individual (ACTUALIZADO)
+  Widget _buildNewsCard(NewsItem newsItem) {
     return Card(
-      clipBehavior: Clip.antiAlias, // Para redondear la imagen
+      margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
         onTap: () {
-          // TODO: Lógica para abrir la noticia
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.network(
-              imageUrl,
-              height: 150,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              // Fallback por si la imagen falla
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 150,
-                color: Colors.grey[200],
-                child: const Center(child: Icon(Icons.image_not_supported)),
-              ),
+          // TODO: Lógica para abrir la noticia completa
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Abriendo: ${newsItem.title}'),
+              backgroundColor: AppColors.darkBlue,
             ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(
-                title,
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Título
+              Text(
+                newsItem.title,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkBlue,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.darkestBlue,
                 ),
               ),
-            ),
-          ],
+              
+              const SizedBox(height: 12),
+              
+              // Descripción
+              Text(
+                newsItem.description,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.greyText,
+                  height: 1.4,
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Fecha y enlace
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    newsItem.date,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.greyText,
+                    ),
+                  ),
+                  const Row(
+                    children: [
+                      Text(
+                        'Leer más ',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.darkBlue,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward, size: 14, color: AppColors.darkBlue),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
