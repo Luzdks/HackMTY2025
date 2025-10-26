@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 import google.generativeai as genai
 
 # --- CONFIGURACIÓN GEMINI ---
-GOOGLE_API_KEY = "AIzaSyBD3nOE5TLZ0wumoawua-1nSNWqNypgN6A"  # Reemplaza con tu API key de Google AI Studio
+GOOGLE_API_KEY = ""  # Reemplaza con tu API key de Google AI Studio
 
 try:
     genai.configure(api_key=GOOGLE_API_KEY)
