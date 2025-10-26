@@ -74,7 +74,7 @@ class _HomeTabState extends State<HomeTab> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Ahorros Totales',
+              'Saldo',
               style: TextStyle(
                 fontSize: 16,
                 color: AppColors.greyText,
