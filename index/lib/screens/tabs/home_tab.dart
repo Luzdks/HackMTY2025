@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// --- NUEVOS IMPORTS ---
+import 'dart:convert'; // Para decodificar el JSON
+import 'package:flutter/services.dart' show rootBundle; // Para cargar el archivo local
+import 'package:url_launcher/url_launcher.dart'; // Para abrir los enlaces
+// --- FIN DE NUEVOS IMPORTS ---
+
 import '../../theme/app_colors.dart';
-import '../../../services/news_service.dart'; // Importamos el servicio de noticias
+import '../../../services/news_service.dart'; // Importamos el servicio de noticias (contiene la clase NewsItem)
+
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -27,7 +35,7 @@ class _HomeTabState extends State<HomeTab> {
     _loadNews(); // Cargar noticias al iniciar
   }
 
-  // Cargamos el nombre del usuario
+  // Cargamos el nombre del usuario (SIN CAMBIOS)
   Future<void> _loadUserData() async {
     try {
       final user = _auth.currentUser;
@@ -46,20 +54,55 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  // Cargar noticias desde el servicio
+  // --- FUNCIÓN _loadNews MODIFICADA ---
+  // Cargar noticias desde el archivo JSON local
   Future<void> _loadNews() async {
-    try {
-      final news = await NewsService.getPositiveNews();
+    // Indicamos que estamos cargando
+    if (mounted) {
       setState(() {
-        _news = news;
-        _isLoadingNews = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingNews = false;
+        _isLoadingNews = true;
       });
     }
+
+    try {
+      // 1. Cargar el contenido del archivo JSON como un String
+      // Asegúrate que la ruta 'assets/noticias.json' sea correcta
+      final String jsonString = await rootBundle.loadString('python_server/noticias.json');
+      
+      // 2. Decodificar el String JSON a una lista dinámica
+      final List<dynamic> jsonList = json.decode(jsonString);
+
+      // 3. Mapear la lista de JSON a nuestra lista de NewsItem
+      final List<NewsItem> news = jsonList.map((jsonItem) {
+        return NewsItem(
+          title: jsonItem['titulo'] ?? 'Sin título',
+          description: jsonItem['descripcion'] ?? 'Sin descripción',
+          link: jsonItem['link'] ?? '',
+          
+          // Tu JSON no tiene fecha, pero la clase NewsItem la requiere.
+          // Usamos un valor temporal o un string vacío.
+          date: 'Fecha no disponible', 
+        );
+      }).toList();
+
+      // 4. Actualizar el estado con las noticias cargadas
+      if (mounted) {
+        setState(() {
+          _news = news;
+          _isLoadingNews = false;
+        });
+      }
+    } catch (e) {
+      // print('Error al cargar noticias locales: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingNews = false;
+          _news = []; // Dejar la lista vacía si hay un error
+        });
+      }
+    }
   }
+  // --- FIN DE LA FUNCIÓN MODIFICADA ---
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +146,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '\$1,280.50', // Dato de ejemplo
+              '\$14,280.50', // Dato de ejemplo
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -131,7 +174,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // Widget para la sección de noticias (ACTUALIZADO)
+  // Widget para la sección de noticias (SIN CAMBIOS, PERO _loadNews afectará su estado)
   Widget _buildNewsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,19 +240,32 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // Widget para una tarjeta de noticia individual (ACTUALIZADO)
+  // --- WIDGET _buildNewsCard MODIFICADO ---
+  // Se actualizó el 'onTap' para abrir el enlace
   Widget _buildNewsCard(NewsItem newsItem) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () {
-          // TODO: Lógica para abrir la noticia completa
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Abriendo: ${newsItem.title}'),
-              backgroundColor: AppColors.darkBlue,
-            ),
-          );
+        onTap: () async {
+          // Lógica para abrir el enlace de la noticia
+          if (newsItem.link.isEmpty) return; // No hacer nada si no hay link
+
+          final Uri url = Uri.parse(newsItem.link);
+          
+          if (await canLaunchUrl(url)) {
+            // Abrir en el navegador externo
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            // Mostrar error si no se puede abrir
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No se pudo abrir el enlace'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -245,7 +301,7 @@ class _HomeTabState extends State<HomeTab> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    newsItem.date,
+                    newsItem.date, // Mostrará "Fecha no disponible"
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppColors.greyText,
@@ -272,4 +328,5 @@ class _HomeTabState extends State<HomeTab> {
       ),
     );
   }
+  // --- FIN DEL WIDGET MODIFICADO ---
 }
