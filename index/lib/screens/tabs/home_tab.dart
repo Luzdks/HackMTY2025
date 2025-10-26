@@ -103,7 +103,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '\$14,280.50', // Dato de ejemplo
+              '\$1,280.50', // Dato de ejemplo
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
