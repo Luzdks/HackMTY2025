@@ -9,9 +9,3 @@ __pycache__/
 # Archivos de Sistema Operativo
 .DS_Store
 Thumbs.db
-
-# Archivo de configuración de Firebase (¡CONTIENE CLAVES!)
-/index/lib/firebase_options.dart
-
-# Archivo de configuración de Android (¡CONTIENE CLAVES!)
-/index/android/app/google-services.json
