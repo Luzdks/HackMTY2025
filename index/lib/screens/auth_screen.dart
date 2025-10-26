@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 // Importamos el paquete de Autenticación
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,7 +51,7 @@ class _AuthScreenState extends State<AuthScreen> {
     // 2. Validaciones simples
     if (email.isEmpty || password.isEmpty || (!_isLoginView && name.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Por favor, llena todos los campos.'), 
+        const SnackBar(content: Text('Por favor, llena todos los campos.'), 
         backgroundColor: Colors.red),
       );
       return; 
@@ -107,7 +109,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     } on FirebaseAuthException catch (e) {
       // --- MANEJO DE ERRORES DE FIREBASE ---
-      print('Error de FirebaseAuth: ${e.code}');
+      //print('Error de FirebaseAuth: ${e.code}');
       String message = 'Ocurrió un error. Intenta de nuevo.';
       if (e.code == 'weak-password') {
         message = 'La contraseña es muy débil (6+ caracteres).';
@@ -127,9 +129,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
     } catch (e) {
       // Manejo de errores generales
-      print('Error en _submit: $e');
+      //print('Error en _submit: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ocurrió un error inesperado.'), 
+        const SnackBar(content: Text('Ocurrió un error inesperado.'), 
         backgroundColor: Colors.red)
       );
       setState(() { _isLoading = false; });
@@ -141,12 +143,12 @@ class _AuthScreenState extends State<AuthScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isLoginView ? 'Iniciar Sesión' : 'Crear Cuenta'),
-        backgroundColor: Color.fromRGBO(3, 4, 94, 1.0),
+        backgroundColor: const Color.fromRGBO(3, 4, 94, 1.0),
         foregroundColor: Colors.white,
       ),
       body: Container(
         // Usamos los colores de tu paleta
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [
               Color.fromRGBO(2, 62, 138, 1.0),
@@ -161,67 +163,67 @@ class _AuthScreenState extends State<AuthScreen> {
             child: Padding(
               padding: const EdgeInsets.all(30.0),
               child: _isLoading 
-                ? Center(child: CircularProgressIndicator(color: Colors.white)) 
+                ? const Center(child: CircularProgressIndicator(color: Colors.white)) 
                 : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     _isLoginView ? '¡Bienvenido de vuelta!' : 'Crea tu cuenta',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
 
                   // --- CAMPO DE NOMBRE (Solo si es Registro) ---
                   if (!_isLoginView)
                     TextField(
                       controller: _nameController,
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                       decoration: _buildInputDecoration('Nombre'),
                       enabled: !_isLoading, 
                     ),
-                  if (!_isLoginView) SizedBox(height: 20),
+                  if (!_isLoginView) const SizedBox(height: 20),
 
                   // --- CAMPO DE EMAIL ---
                   TextField(
                     controller: _emailController,
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                     keyboardType: TextInputType.emailAddress, 
                     decoration: _buildInputDecoration('Email'), 
                     enabled: !_isLoading,
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // --- CAMPO DE CONTRASEÑA ---
                   TextField(
                     controller: _passwordController,
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                     obscureText: true, 
                     decoration: _buildInputDecoration('Contraseña'),
                     enabled: !_isLoading,
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   
                   // --- BOTÓN DE ENVIAR ---
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromRGBO(144, 224, 239, 1.0), // Tu paleta
-                      foregroundColor: Color.fromRGBO(3, 4, 94, 1.0), // Tu paleta
-                      minimumSize: Size(double.infinity, 50),
+                      backgroundColor: const Color.fromRGBO(144, 224, 239, 1.0), // Tu paleta
+                      foregroundColor: const Color.fromRGBO(3, 4, 94, 1.0), // Tu paleta
+                      minimumSize: const Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     child: Text(
                       _isLoginView ? 'Ingresar' : 'Registrarme',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
                   // --- BOTÓN PARA CAMBIAR DE VISTA ---
                   TextButton(
@@ -253,7 +255,7 @@ class _AuthScreenState extends State<AuthScreen> {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
     );
   }
 }
