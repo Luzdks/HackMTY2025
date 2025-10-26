@@ -43,7 +43,8 @@ def analyze_and_summarize_with_gemini(title, summary_snippet):
     Analiza el siguiente artículo de noticias (basado en su título y resumen).
     Tu tarea es doble:
     1. Determina si la noticia es GENUINAMENTE POSITIVA o constructiva sobre el medio ambiente (ej. habla de soluciones, recuperación, nuevas tecnologías limpias, etc.).
-    2. Si ES positiva, crea un nuevo resumen corto y atractivo (máximo 2 frases).
+    2. Es del 2024 en adelante
+    3. Si ES positiva, crea un nuevo resumen corto y atractivo (máximo 2 frases).
     
     Responde SÓLO con un objeto JSON.
     - Si es positiva, usa esta estructura: 
