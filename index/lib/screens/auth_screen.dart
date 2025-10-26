@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-// Importamos el archivo de la pantalla de inicio para poder navegar a él
-import 'home_screen.dart'; 
-
-// -------------------------------------------------------------------
-// PANTALLA DE AUTENTICACIÓN (Login / Registro)
-// (Este es el mismo código que tenías antes, pero en su propio archivo)
-// -------------------------------------------------------------------
+// Importamos el paquete de Autenticación
+import 'package:firebase_auth/firebase_auth.dart';
+// Importamos el paquete de Base de Datos
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -16,41 +13,127 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLoginView = true;
+  bool _isLoading = false; 
+
+  // Controladores para los campos de texto
   final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  
+  // Obtenemos la instancia de FirebaseAuth
+  final _auth = FirebaseAuth.instance;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _phoneController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  // Función para cambiar entre vista de Login y Registro
   void _toggleView() {
+    if (_isLoading) return; 
     setState(() {
       _isLoginView = !_isLoginView;
     });
   }
 
-  void _submit() {
-    final String userName = _isLoginView ? _phoneController.text : _nameController.text;
+  // --- ¡AQUÍ ESTÁ LA LÓGICA DE CREAR CUENTA Y GUARDAR! ---
+  void _submit() async {
+    // 1. Obtenemos los valores de los campos
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final name = _nameController.text.trim();
 
-    if (_isLoginView) {
-      print('Iniciando sesión con Teléfono: ${_phoneController.text}');
-    } else {
-      print('Registrando con Nombre: ${_nameController.text}');
+    // 2. Validaciones simples
+    if (email.isEmpty || password.isEmpty || (!_isLoginView && name.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Por favor, llena todos los campos.'), 
+        backgroundColor: Colors.red),
+      );
+      return; 
     }
+    
+    // 3. Mostramos el círculo de "cargando"
+    setState(() { _isLoading = true; });
 
-    // ¡Navegación!
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        // Le decimos que construya 'HomeScreen'
-        builder: (context) => HomeScreen(userName: userName),
-      ),
-    );
+    try {
+      // Si estamos en la vista de "Login"
+      if (_isLoginView) {
+        
+        // --- 4a. LÓGICA DE LOGIN ---
+        await _auth.signInWithEmailAndPassword(
+          email: email, 
+          password: password,
+        );
+        // (Si esto es exitoso, el 'StreamBuilder' en main.dart
+        //  nos navegará automáticamente)
+
+      } else {
+        
+        // --- 4b. LÓGICA DE REGISTRO ---
+        
+        // Primero, creamos el usuario en FIREBASE AUTH
+        final userCredential = await _auth.createUserWithEmailAndPassword(
+          email: email, 
+          password: password,
+        );
+        
+        // 5. ¡¡GUARDAR DATOS EN FIRESTORE!!
+        // Obtenemos el UID (ID único) del usuario
+        final uid = userCredential.user!.uid;
+
+        // Creamos el mapa (JSON) de los datos que queremos guardar
+        final userData = {
+          'name': name,
+          'email': email,
+          'createdAt': Timestamp.now(), // Guarda la fecha de creación
+        };
+        
+        // Ahora, vamos a Firestore, a la colección 'users',
+        // creamos un documento con el 'uid' del usuario,
+        // y le guardamos los datos.
+        await FirebaseFirestore.instance
+            .collection('users') // La "carpeta"
+            .doc(uid)           // El "archivo" (nombrado como el ID)
+            .set(userData);      // Los datos
+        
+        // (Si esto es exitoso, el 'StreamBuilder' en main.dart
+        //  nos navegará automáticamente)
+      }
+      
+      if (!mounted) return;
+
+    } on FirebaseAuthException catch (e) {
+      // --- MANEJO DE ERRORES DE FIREBASE ---
+      print('Error de FirebaseAuth: ${e.code}');
+      String message = 'Ocurrió un error. Intenta de nuevo.';
+      if (e.code == 'weak-password') {
+        message = 'La contraseña es muy débil (6+ caracteres).';
+      } else if (e.code == 'email-already-in-use') {
+        message = 'Ese correo ya está registrado.';
+      } else if (e.code == 'invalid-email') {
+        message = 'El correo no es válido.';
+      } else if (e.code == 'INVALID_LOGIN_CREDENTIALS' || e.code == 'wrong-password' || e.code == 'user-not-found') {
+        message = 'Credenciales incorrectas.';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red)
+      );
+      // Si hubo un error, quitamos el "cargando"
+      setState(() { _isLoading = false; }); 
+
+    } catch (e) {
+      // Manejo de errores generales
+      print('Error en _submit: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ocurrió un error inesperado.'), 
+        backgroundColor: Colors.red)
+      );
+      setState(() { _isLoading = false; });
+    }
   }
 
   @override
@@ -62,6 +145,7 @@ class _AuthScreenState extends State<AuthScreen> {
         foregroundColor: Colors.white,
       ),
       body: Container(
+        // Usamos los colores de tu paleta
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
@@ -76,7 +160,9 @@ class _AuthScreenState extends State<AuthScreen> {
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(30.0),
-              child: Column(
+              child: _isLoading 
+                ? Center(child: CircularProgressIndicator(color: Colors.white)) 
+                : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
@@ -88,32 +174,43 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                   SizedBox(height: 30),
+
+                  // --- CAMPO DE NOMBRE (Solo si es Registro) ---
                   if (!_isLoginView)
                     TextField(
                       controller: _nameController,
                       style: TextStyle(color: Colors.white),
                       decoration: _buildInputDecoration('Nombre'),
+                      enabled: !_isLoading, 
                     ),
                   if (!_isLoginView) SizedBox(height: 20),
+
+                  // --- CAMPO DE EMAIL ---
                   TextField(
-                    controller: _phoneController,
+                    controller: _emailController,
                     style: TextStyle(color: Colors.white),
-                    keyboardType: TextInputType.phone,
-                    decoration: _buildInputDecoration('Teléfono'),
+                    keyboardType: TextInputType.emailAddress, 
+                    decoration: _buildInputDecoration('Email'), 
+                    enabled: !_isLoading,
                   ),
                   SizedBox(height: 20),
+
+                  // --- CAMPO DE CONTRASEÑA ---
                   TextField(
                     controller: _passwordController,
                     style: TextStyle(color: Colors.white),
-                    obscureText: true,
+                    obscureText: true, 
                     decoration: _buildInputDecoration('Contraseña'),
+                    enabled: !_isLoading,
                   ),
                   SizedBox(height: 40),
+                  
+                  // --- BOTÓN DE ENVIAR ---
                   ElevatedButton(
-                    onPressed: _submit,
+                    onPressed: _isLoading ? null : _submit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromRGBO(144, 224, 239, 1.0),
-                      foregroundColor: Color.fromRGBO(3, 4, 94, 1.0),
+                      backgroundColor: Color.fromRGBO(144, 224, 239, 1.0), // Tu paleta
+                      foregroundColor: Color.fromRGBO(3, 4, 94, 1.0), // Tu paleta
                       minimumSize: Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -125,8 +222,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                   SizedBox(height: 20),
+
+                  // --- BOTÓN PARA CAMBIAR DE VISTA ---
                   TextButton(
-                    onPressed: _toggleView,
+                    onPressed: _isLoading ? null : _toggleView,
                     style: TextButton.styleFrom(foregroundColor: Colors.white),
                     child: Text(
                       _isLoginView
@@ -143,6 +242,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  // Helper para construir la decoración de los inputs
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       hintText: label,
