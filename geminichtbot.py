@@ -23,7 +23,7 @@ def es_pregunta_valida(pregunta_usuario):
     Devuelve True si es válida, False si no lo es.
     """
     print("🧠 Verificando si el tema es válido...")
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-pro')
     
     prompt_clasificador = f"""
     Eres un clasificador de temas estricto. Tu única función es decidir si la pregunta de un usuario pertenece a una de las siguientes categorías permitidas.
@@ -201,7 +201,7 @@ def extraer_texto_de_url(url):
 def generar_respuesta_con_gemini(contexto, pregunta, fuentes):
     """Usa el modelo Gemini para generar una respuesta basada en el contexto."""
     print("🤖 Generando respuesta final con Gemini...")
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.5-pro')
     
     prompt = f"""
     Eres un asistente especializado en finanzas y medio ambiente. Basado EXCLUSIVAMENTE en el contexto proporcionado, responde la pregunta del usuario de forma clara, concisa y bien estructurada.
