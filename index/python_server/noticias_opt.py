@@ -2,7 +2,6 @@ from fastapi import FastAPI
 import google.generativeai as genai
 import feedparser
 import json
-import time
 
 # --- Configuración ---
 GEMINI_API_KEY = "AIzaSyDOVJ4gVXW2Zk_S42Q7cUKI5InwUSj1UzI"
@@ -93,6 +92,5 @@ def get_positive_news():
             "descripcion": resumen,
             "link": entry.link
         })
-        time.sleep(1)  # breve espera para evitar límite
 
     return {"noticias": positive_news_list}
